@@ -9,18 +9,18 @@ import Foundation
 
 public struct DeviceAnouncement: PdlPacket, CustomStringConvertible {
 
-  internal init(received: Date, name: String, ipAddress: String) {
+  public let received: Date
+  public let name: String
+  public let ipAddress: String
+  public let isMixer: Bool
+  public let type: PdlPacketType
+
+  internal init(received: Date, name: String, ipAddress: String, isMixer: Bool) {
     self.received = received
     self.name = name
     self.ipAddress = ipAddress
-  }
-
-  public let received: Date
-  let name: String
-  public let ipAddress: String
-
-  public var type: PdlPacketType {
-    .deviceAnouncement
+    self.isMixer = isMixer
+    self.type = .deviceAnouncement
   }
 
   public var description: String {

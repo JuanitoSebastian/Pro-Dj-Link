@@ -15,6 +15,7 @@ public struct KeepAlive: PdlPacket, CustomStringConvertible {
   public let isMixer: Bool
   public let macAddress: [UInt8]
   public let ipAddress: String
+  public let type: PdlPacketType
 
   internal init(
     received: Date,
@@ -29,11 +30,8 @@ public struct KeepAlive: PdlPacket, CustomStringConvertible {
     self.playerNumber = playerNumber
     self.macAddress = macAddress
     self.ipAddress = ipAddress
-    self.isMixer = isMixer
-  }
-
-  public var type: PdlPacketType {
-    .keepAlive
+    self.isMixer = name.contains("DJM")
+    self.type = .keepAlive
   }
 
   public var macAddressString: String {

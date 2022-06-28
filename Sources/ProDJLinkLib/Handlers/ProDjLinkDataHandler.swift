@@ -70,15 +70,18 @@ final class ProDjLinkDataHandler: ChannelInboundHandler {
   private func createDeviceAnouncementPacket(message: AddressedEnvelope<ByteBuffer>) throws -> DeviceAnouncement {
     let data = message.data
     let name = decodeStringFromBytes(atIndex: 12, length: 20, bytes: data)
+    let deviceType = decodeIntFromBytes(atIndex: 36, length: 1, bytes: data)
+    let ipAddress = message.remoteAddress.ipAddress
 
-    guard let name = name else {
+    guard let name = name, let deviceType = deviceType, let ipAddress = ipAddress else {
       throw PdlError.decodingError
     }
 
     let packet = DeviceAnouncement(
       received: Date(),
       name: name,
-      ipAddress: message.remoteAddress.ipAddress!
+      ipAddress: ipAddress,
+      isMixer: deviceType != 1
     )
 
     return packet
