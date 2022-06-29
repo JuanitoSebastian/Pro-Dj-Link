@@ -40,10 +40,10 @@ final class ProDjLinkDataHandler: ChannelInboundHandler {
 
   private func createKeepAlivePacket(message: AddressedEnvelope<ByteBuffer>) throws -> KeepAlive {
     let data = message.data
-    let name = decodeStringFromBytes(atIndex: 12, length: 20, bytes: data)
-    let playerNumber = decodeIntFromBytes(atIndex: 36, length: 1, bytes: data)
-    let deviceType = decodeIntFromBytes(atIndex: 55, length: 1, bytes: data)
-    let macAddress = data.getBytes(at: 40, length: 6)
+    let name = decodeStringFromBytes(atIndex: 0x0c, length: 20, bytes: data)
+    let playerNumber = decodeIntFromBytes(atIndex: 0x24, length: 1, bytes: data)
+    let deviceType = decodeIntFromBytes(atIndex: 0x34, length: 1, bytes: data)
+    let macAddress = data.getBytes(at: 0x26, length: 6)
 
     guard
       let name = name,
@@ -69,8 +69,8 @@ final class ProDjLinkDataHandler: ChannelInboundHandler {
 
   private func createDeviceAnouncementPacket(message: AddressedEnvelope<ByteBuffer>) throws -> DeviceAnouncement {
     let data = message.data
-    let name = decodeStringFromBytes(atIndex: 12, length: 20, bytes: data)
-    let deviceType = decodeIntFromBytes(atIndex: 36, length: 1, bytes: data)
+    let name = decodeStringFromBytes(atIndex: 0x0c, length: 20, bytes: data)
+    let deviceType = decodeIntFromBytes(atIndex: 0x24, length: 1, bytes: data)
     let ipAddress = message.remoteAddress.ipAddress
 
     guard let name = name, let deviceType = deviceType, let ipAddress = ipAddress else {
