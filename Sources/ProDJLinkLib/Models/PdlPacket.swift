@@ -15,9 +15,36 @@ public protocol PdlPacket {
 
 }
 
-public enum PdlPacketType: UInt8 {
+public enum PdlPacketType {
 
-  case keepAlive = 0x06
-  case deviceAnouncement = 0x0a
+  // PORT 50000
+  case keepAlive
+  case deviceAnouncement
 
+  // PORT 50001
+  case beat
+
+  public static func determineType(identifier: UInt8, port: Int) -> PdlPacketType? {
+    if port == 50000 {
+      switch identifier {
+      case 0x06:
+        return .keepAlive
+      case 0x0a:
+        return .deviceAnouncement
+      default:
+        return nil
+      }
+    }
+
+    if port == 50001 {
+      switch identifier {
+      case 0x28:
+        return .beat
+      default:
+        return nil
+      }
+    }
+
+    return nil
+  }
 }

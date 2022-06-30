@@ -15,10 +15,14 @@ final class ProDjLinkDataHandler: ChannelInboundHandler {
 
   public func channelRead(context: ChannelHandlerContext, data: NIOAny) {
     let addressedEnvelope = self.unwrapInboundIn(data)
-    let typeRaw = addressedEnvelope.data.getBytes(at: 10, length: 1)
-    guard let typeRaw = typeRaw else { return }
+    guard
+      let typeRaw = addressedEnvelope.data.getBytes(at: 10, length: 1),
+      let port = context.localAddress?.port
+    else {
+      return
+    }
 
-    let packetType = PdlPacketType(rawValue: typeRaw[0])
+    let packetType = PdlPacketType.determineType(identifier: typeRaw[0], port: port)
 
     do {
       switch packetType {
@@ -28,6 +32,10 @@ final class ProDjLinkDataHandler: ChannelInboundHandler {
 
       case .deviceAnouncement:
         let packet = try createDeviceAnouncementPacket(message: addressedEnvelope)
+        context.fireChannelRead(self.wrapInboundOut(packet))
+
+      case .beat:
+        let packet = try createBeatPacket(message: addressedEnvelope)
         context.fireChannelRead(self.wrapInboundOut(packet))
 
       default:
@@ -89,6 +97,44 @@ final class ProDjLinkDataHandler: ChannelInboundHandler {
     return packet
   }
 
+  private func createBeatPacket(message: AddressedEnvelope<ByteBuffer>) throws -> Beat {
+    let data = message.data
+
+    guard
+      let name = decodeStringFromBytes(atIndex: 0x0b, length: 0x14, bytes: data),
+      let playerNumber = decodeIntFromBytes(atIndex: 0x21, length: 1, bytes: data),
+      let nextBeat = decodeIntFromBytes(atIndex: 0x24, length: 32, bytes: data),
+      let secondBeat = decodeIntFromBytes(atIndex: 0x28, length: 32, bytes: data),
+      let nextBar = decodeIntFromBytes(atIndex: 0x2c, length: 32, bytes: data),
+      let fourthBeat = decodeIntFromBytes(atIndex: 0x30, length: 32, bytes: data),
+      let secondBar = decodeIntFromBytes(atIndex: 0x34, length: 32, bytes: data),
+      let eightBeat = decodeIntFromBytes(atIndex: 0x3a, length: 32, bytes: data),
+      let pitch = decodeIntFromBytes(atIndex: 0x54, length: 32, bytes: data),
+      let bpm = decodeIntFromBytes(atIndex: 0x5a, length: 16, bytes: data),
+      let ipAddress = message.remoteAddress.ipAddress
+    else {
+      throw PdlError.decodingError
+    }
+
+    let packet = Beat(
+      received: Date.now,
+      ipAddress: ipAddress,
+      name: name,
+      playerNumber: playerNumber,
+      nextBeat: nextBeat,
+      secondBeat: secondBeat,
+      nextBar: nextBar,
+      fourthBeat: fourthBeat,
+      secondBar: secondBar,
+      eightBeat: eightBeat,
+      pitch: pitch,
+      bpm: bpm
+    )
+
+    return packet
+
+  }
+
 }
 
 // MARK: - Helper Functions
@@ -121,6 +167,18 @@ extension ProDjLinkDataHandler {
     switch length {
     case 1:
       let decodedNumber: UInt8? = bytes.getInteger(at: atIndex)
+      guard let decodedNumber = decodedNumber else {
+        return nil
+      }
+      return Int(decodedNumber)
+    case 16:
+      let decodedNumber: UInt16? = bytes.getInteger(at: atIndex)
+      guard let decodedNumber = decodedNumber else {
+        return nil
+      }
+      return Int(decodedNumber)
+    case 32:
+      let decodedNumber: UInt32? = bytes.getInteger(at: atIndex)
       guard let decodedNumber = decodedNumber else {
         return nil
       }

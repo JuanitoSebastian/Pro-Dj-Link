@@ -23,7 +23,7 @@ public class ProDjLinkService {
     ipAddress: String = defaultIpAddress,
     port: Int = defaultPort
   ) {
-    self.group =  MultiThreadedEventLoopGroup(numberOfThreads: 1)
+    self.group =  MultiThreadedEventLoopGroup(numberOfThreads: 2)
     self.queue = DispatchQueue(label: "ProDjLinkQ")
     self.channels = []
     self.ipAddress = ipAddress
@@ -41,7 +41,8 @@ public class ProDjLinkService {
           try! self.group.syncShutdownGracefully()
         }
 
-        try self.channels.append(self.getBootstrap().bind(host: ipAddress, port: port).wait())
+        try self.channels.append(self.getBootstrap().bind(host: ipAddress, port: 50000).wait())
+        try self.channels.append(self.getBootstrap().bind(host: ipAddress, port: 50001).wait())
         print("Server running at: \(ipAddress) port \(port)")
         try self.channels.forEach { channel in try channel.closeFuture.wait() }
       } catch {
