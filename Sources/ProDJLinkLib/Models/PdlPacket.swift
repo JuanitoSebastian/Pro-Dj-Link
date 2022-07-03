@@ -47,4 +47,12 @@ public enum PdlPacketType {
 
     return nil
   }
+
+  var typeIdentifier: UInt8 {
+    switch self {
+    case .keepAlive: return 0x06
+    case .deviceAnouncement: return 0x0a
+    case .beat: return 0x28
+    }
+  }
 }
