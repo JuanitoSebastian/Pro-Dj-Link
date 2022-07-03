@@ -48,7 +48,7 @@ final class ProDjLinkDataHandler: ChannelInboundHandler {
     }
   }
 
-  private func createKeepAlivePacket(message: AddressedEnvelope<ByteBuffer>) throws -> KeepAlive {
+  private func createKeepAlivePacket(message: AddressedEnvelope<ByteBuffer>) throws -> PdlPacket {
     let data = message.data
     let name = decodeStringFromBytes(atIndex: 0x0c, length: 20, bytes: data)
     let playerNumber = decodeIntFromBytes(atIndex: 0x24, length: 1, bytes: data)
@@ -60,44 +60,54 @@ final class ProDjLinkDataHandler: ChannelInboundHandler {
       let playerNumber = playerNumber,
       let deviceType = deviceType,
       let macAddress = macAddress,
-      let ipAddress = message.remoteAddress.ipAddress
+      let senderIpAddress = message.remoteAddress.ipAddress
     else {
       throw PdlError.decodingError
     }
 
-    let packet = KeepAlive(
-      received: Date(),
+    let pdlData = KeepAlive(
       name: name,
       playerNumber: playerNumber,
       macAddress: macAddress,
-      ipAddress: ipAddress,
+      ipAddress: senderIpAddress,
       isMixer: deviceType != 1
+    )
+
+    let packet = PdlPacket(
+      senderIpAddress: senderIpAddress,
+      received: Date.now,
+      data: pdlData
     )
 
     return packet
   }
 
-  private func createDeviceAnouncementPacket(message: AddressedEnvelope<ByteBuffer>) throws -> DeviceAnouncement {
+  private func createDeviceAnouncementPacket(message: AddressedEnvelope<ByteBuffer>) throws -> PdlPacket {
     let data = message.data
-    let name = decodeStringFromBytes(atIndex: 0x0c, length: 20, bytes: data)
-    let deviceType = decodeIntFromBytes(atIndex: 0x24, length: 1, bytes: data)
-    let ipAddress = message.remoteAddress.ipAddress
 
-    guard let name = name, let deviceType = deviceType, let ipAddress = ipAddress else {
+    guard
+      let name = decodeStringFromBytes(atIndex: 0x0c, length: 20, bytes: data),
+      let deviceType = decodeIntFromBytes(atIndex: 0x24, length: 1, bytes: data),
+      let senderIpAddress = message.remoteAddress.ipAddress
+    else {
       throw PdlError.decodingError
     }
 
-    let packet = DeviceAnouncement(
-      received: Date(),
+    let pdlData = DeviceAnouncement(
       name: name,
-      ipAddress: ipAddress,
       isMixer: deviceType != 1
+    )
+
+    let packet = PdlPacket(
+      senderIpAddress: senderIpAddress,
+      received: Date.now,
+      data: pdlData
     )
 
     return packet
   }
 
-  private func createBeatPacket(message: AddressedEnvelope<ByteBuffer>) throws -> Beat {
+  private func createBeatPacket(message: AddressedEnvelope<ByteBuffer>) throws -> PdlPacket {
     let data = message.data
 
     guard
@@ -111,14 +121,12 @@ final class ProDjLinkDataHandler: ChannelInboundHandler {
       let eightBeat = decodeIntFromBytes(atIndex: 0x3a, length: 32, bytes: data),
       let pitch = decodeIntFromBytes(atIndex: 0x54, length: 32, bytes: data),
       let bpm = decodeIntFromBytes(atIndex: 0x5a, length: 16, bytes: data),
-      let ipAddress = message.remoteAddress.ipAddress
+      let senderIpAddress = message.remoteAddress.ipAddress
     else {
       throw PdlError.decodingError
     }
 
-    let packet = Beat(
-      received: Date.now,
-      ipAddress: ipAddress,
+    let pdlData = Beat(
       name: name,
       playerNumber: playerNumber,
       nextBeat: nextBeat,
@@ -130,6 +138,11 @@ final class ProDjLinkDataHandler: ChannelInboundHandler {
       pitch: pitch,
       bpm: bpm
     )
+
+    let packet = PdlPacket(
+      senderIpAddress: senderIpAddress,
+      received: Date.now,
+      data: pdlData)
 
     return packet
 

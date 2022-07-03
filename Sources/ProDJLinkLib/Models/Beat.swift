@@ -7,10 +7,8 @@
 
 import Foundation
 
-public struct Beat: PdlPacket, CustomStringConvertible {
+public struct Beat: PdlData, CustomStringConvertible {
 
-  public let received: Date
-  public let ipAddress: String
   public let type: PdlPacketType
 
   public let name: String
@@ -25,8 +23,6 @@ public struct Beat: PdlPacket, CustomStringConvertible {
   public let bpm: Int
 
   internal init(
-    received: Date,
-    ipAddress: String,
     name: String,
     playerNumber: Int,
     nextBeat: Int,
@@ -38,8 +34,6 @@ public struct Beat: PdlPacket, CustomStringConvertible {
     pitch: Int,
     bpm: Int
   ) {
-    self.received = received
-    self.ipAddress = ipAddress
     self.name = name
     self.playerNumber = playerNumber
     self.nextBeat = nextBeat
@@ -57,8 +51,6 @@ public struct Beat: PdlPacket, CustomStringConvertible {
   public var description: String {
     return """
     Beat from \(name)
-    Received: \(received)
-    Ip: \(ipAddress)
     BPM: \(bpm)
     Pitch: \(pitch)
     """

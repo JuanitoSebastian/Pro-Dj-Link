@@ -7,9 +7,8 @@
 
 import Foundation
 
-public struct KeepAlive: PdlPacket, CustomStringConvertible {
+public struct KeepAlive: PdlData, CustomStringConvertible {
 
-  public let received: Date
   public let name: String
   public let playerNumber: Int
   public let isMixer: Bool
@@ -18,14 +17,12 @@ public struct KeepAlive: PdlPacket, CustomStringConvertible {
   public let type: PdlPacketType
 
   internal init(
-    received: Date,
     name: String,
     playerNumber: Int,
     macAddress: [UInt8],
     ipAddress: String,
     isMixer: Bool
   ) {
-    self.received = received
     self.name = name
     self.playerNumber = playerNumber
     self.macAddress = macAddress
@@ -45,7 +42,6 @@ public struct KeepAlive: PdlPacket, CustomStringConvertible {
   public var description: String {
     return """
     Keep Alive from \(name)
-    Received: \(received)
     Ip: \(ipAddress)
     Mac: \(macAddressString)
     Player Number: \(playerNumber)

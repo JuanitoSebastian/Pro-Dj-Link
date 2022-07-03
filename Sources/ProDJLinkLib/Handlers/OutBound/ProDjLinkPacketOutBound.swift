@@ -10,7 +10,7 @@ import NIOCore
 
 public class ProDjLinkPacketOutBound: ChannelOutboundHandler {
 
-  public typealias OutboundIn = PdlPacket
+  public typealias OutboundIn = PdlData
   public typealias OutboundOut = AddressedEnvelope<ByteBuffer>
 
   public func write(
@@ -45,8 +45,6 @@ public class ProDjLinkPacketOutBound: ChannelOutboundHandler {
 
     buff.writeBytes([0x01, 0x02])
     buff.writeInteger(UInt16(0x35))
-
-
 
     return buff
   }

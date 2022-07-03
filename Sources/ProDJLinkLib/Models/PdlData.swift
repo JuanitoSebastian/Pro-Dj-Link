@@ -7,11 +7,9 @@
 
 import Foundation
 
-public protocol PdlPacket {
+public protocol PdlData {
 
   var type: PdlPacketType { get }
-  var received: Date { get }
-  var ipAddress: String { get }
 
 }
 
@@ -55,4 +53,12 @@ public enum PdlPacketType {
     case .beat: return 0x28
     }
   }
+}
+
+public struct PdlPacket {
+
+  public let senderIpAddress: String
+  public let received: Date
+  public let data: PdlData
+
 }
