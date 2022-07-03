@@ -48,4 +48,15 @@ public class ProDjLinkPacketOutBound: ChannelOutboundHandler {
 
     return buff
   }
+
+  private func ipAddressToBytes(ipAddress: String) -> [UInt8]? {
+    let splitString = ipAddress.split(separator: ".")
+    guard splitString.count == 4 else { return nil }
+
+    let bytes = splitString.compactMap { value in
+      return UInt8(value, radix: 16)
+    }
+
+    return bytes.count == 4 ? bytes : nil
+  }
 }
