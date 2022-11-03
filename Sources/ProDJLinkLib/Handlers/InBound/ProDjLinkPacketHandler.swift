@@ -21,8 +21,7 @@ final class ProDjLinkPacketHandler: ChannelInboundHandler {
 
   public func channelRead(context: ChannelHandlerContext, data: NIOAny) {
     let packet = self.unwrapInboundIn(data)
-    print(packet)
-    print("--")
+    Log.i(packet)
     self.subject.send(packet)
   }
 

@@ -43,30 +43,36 @@ public class ProDjLinkService {
         }
         self.channels[50000] = try self.getBootstrap().bind(host: self.ipAddressToBind, port: 50000).wait()
         self.channels[50001] = try self.getBootstrap().bind(host: self.ipAddressToBind, port: 50001).wait()
-        print("Server running")
+        Log.i("Server is running")
         self.scheduleKeepAliveTimer()
         try self.channels.values.forEach { channel in try channel.closeFuture.wait() }
       } catch {
-        print("Failed to start Server")
+        Log.e("Failed to start server")
       }
     }
   }
 
   private func scheduleKeepAliveTimer() {
-    group.next().scheduleRepeatedTask(initialDelay: .seconds(1), delay: .seconds(1), notifying: nil) { task in
+    group.next().scheduleRepeatedTask(initialDelay: .seconds(1), delay: .milliseconds(1500), notifying: nil) { task in
       guard self.pdlDeviceIpAddresses.count > 0 else { return }
 
       self.pdlDeviceIpAddresses.forEach { pdlDeviceIpAddress in
         guard let pdlDeviceIpAddress = pdlDeviceIpAddress as? String else { return }
-        let keepAliveData = KeepAlive(name: "CDJ-2000nexus", playerNumber: 5, macAddress: [0xff, 0xff, 0xff, 0xff, 0xff, 0xff], ipAddress: self.ipAddressUserDevice, isMixer: true)
-        let envelope = AddressedEnvelope<PdlData>(remoteAddress: try! SocketAddress.init(ipAddress: pdlDeviceIpAddress, port: 50000), data: keepAliveData)
+        let keepAliveData = KeepAlive(
+          name: "CDJ-2000nexus",
+          playerNumber: 5,
+          macAddress: [0xff, 0xff, 0xff, 0xff, 0xff, 0xff],
+          ipAddress: self.ipAddressUserDevice,
+          isMixer: true
+        )
+        let envelope = AddressedEnvelope<PdlData>(
+          remoteAddress: try! SocketAddress.init(ipAddress: pdlDeviceIpAddress, port: 50000),
+          data: keepAliveData
+        )
 
         guard let channelToUse = self.channels[50000] else { return }
-        print("Sending keepalive")
-        channelToUse.writeAndFlush(envelope).map {
-          print("Keep Alive was sent")
-        }.whenFailure { error in
-          print("Keep Alive failed, Error: \(error)")
+        channelToUse.writeAndFlush(envelope).whenFailure { error in
+          Log.e("Keep Alive failed, Error: \(error)")
           task.cancel()
         }
       }
@@ -74,7 +80,7 @@ public class ProDjLinkService {
   }
 
   public func stopServer() {
-    _ = channels.values.forEach { channel in channel.close() }
+    channels.values.forEach { channel in _ = channel.close() }
   }
 
   func getBootstrap() -> DatagramBootstrap {

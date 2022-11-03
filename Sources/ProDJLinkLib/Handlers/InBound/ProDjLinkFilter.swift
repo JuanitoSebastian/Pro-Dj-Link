@@ -29,11 +29,12 @@ final class ProDjLinkFilter: ChannelInboundHandler {
     guard dataFromBuffer == proDjLinkHeader else { return }
 
     if let remoteIpAddress = addressEnvelope.remoteAddress.ipAddress {
-      if self.pdlDeviceIpAddresses.contains(remoteIpAddress) { return }
+      if self.pdlDeviceIpAddresses.contains(remoteIpAddress) {
+        context.fireChannelRead(data)
+        return
+      }
       self.pdlDeviceIpAddresses.add(remoteIpAddress)
     }
-
-    print(self.pdlDeviceIpAddresses)
 
     context.fireChannelRead(data)
   }

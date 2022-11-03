@@ -50,31 +50,4 @@ public struct KeepAlive: PdlData, CustomStringConvertible {
     IsMixer: \(isMixer)
     """
   }
-
-  var packetBytes: ByteBuffer? {
-    guard let ipAddress = Helper.shared.ipAddressToBytes(ipAddress: self.ipAddress) else { return nil }
-
-    var buff = ByteBuffer()
-    buff.writeBytes(proDjLinkHeader)
-    buff.writeBytes([self.type.typeIdentifier])
-    buff.writeBytes([0x00])
-
-    // Device Name padded with 0x00
-    buff.writeString(self.name)
-    let amountOfPadding = 0x20 - buff.readableBytes
-    buff.writeBytes([UInt8](repeating: 0x00, count: amountOfPadding))
-
-    buff.writeBytes([0x01, 0x02])
-    buff.writeInteger(UInt16(0x35)) // Packet length
-    buff.writeBytes([UInt8(self.playerNumber)])
-    buff.writeBytes([0x01])
-
-    buff.writeBytes(self.macAddress)
-    buff.writeBytes(ipAddress)
-
-    buff.writeBytes([0x01, 0x00, 0x00, 0x00, 0x01, 0x00])
-
-    return buff
-  }
-
 }

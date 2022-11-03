@@ -39,12 +39,12 @@ final class ProDjLinkDataHandler: ChannelInboundHandler {
         context.fireChannelRead(self.wrapInboundOut(packet))
 
       default:
-        print("Message type was not recognized")
+        Log.w("Message type was not recognized")
       }
     } catch PdlError.decodingError {
-      print("Packet values could not be decoded")
+      Log.e("Packet values could not be decoded")
     } catch {
-      print("Error receiving packet")
+      Log.e("Error receiving packet")
     }
   }
 
