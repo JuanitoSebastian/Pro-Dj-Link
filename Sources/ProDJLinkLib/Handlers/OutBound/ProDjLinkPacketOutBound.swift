@@ -7,10 +7,11 @@
 
 import Foundation
 import NIOCore
+import Network
 
 public class ProDjLinkPacketOutBound: ChannelOutboundHandler {
 
-  public typealias OutboundIn = PdlData
+  public typealias OutboundIn = AddressedEnvelope<PdlData>
   public typealias OutboundOut = AddressedEnvelope<ByteBuffer>
 
   public func write(
@@ -19,44 +20,16 @@ public class ProDjLinkPacketOutBound: ChannelOutboundHandler {
     promise: EventLoopPromise<Void>?
   ) {
     let packet = self.unwrapOutboundIn(data)
-
-
-
-    switch packet.type {
+    switch packet.data.type {
     case .keepAlive:
-      let bytes = packetToByteBuffer(packet: packet as! KeepAlive)
+      guard let keepAlivePacket = packet.data as? KeepAlive else { return }
+      guard let bytes = keepAlivePacket.packetBytes else { return }
       let buffer = context.channel.allocator.buffer(buffer: bytes)
-      // let envelope = AddressedEnvelope<ByteBuffer>(remoteAddress: SocketAddress.makeAddressResolvingHost(<#T##host: String##String#>, port: <#T##Int#>), data: buffer)
-      // context.write(self.wrapOutboundOut(envelope))
+      let envelope = try! AddressedEnvelope<ByteBuffer>(remoteAddress: SocketAddress(ipAddress: packet.remoteAddress.ipAddress!, port: packet.remoteAddress.port!), data: buffer)
+      context.write(self.wrapOutboundOut(envelope), promise: promise)
     default:
       print("Sending this type of packet is not implemented")
     }
   }
 
-  private func packetToByteBuffer(packet: KeepAlive) -> ByteBuffer {
-    var buff = ByteBuffer()
-    buff.writeBytes(proDjLinkHeader)
-    buff.writeBytes([packet.type.typeIdentifier])
-    buff.writeBytes([0x00])
-    buff.writeString(packet.name)
-
-    let amountOfPadding = 0x1f - buff.readableBytes
-    buff.writeBytes([UInt8](repeating: 0x00, count: amountOfPadding))
-
-    buff.writeBytes([0x01, 0x02])
-    buff.writeInteger(UInt16(0x35))
-
-    return buff
-  }
-
-  private func ipAddressToBytes(ipAddress: String) -> [UInt8]? {
-    let splitString = ipAddress.split(separator: ".")
-    guard splitString.count == 4 else { return nil }
-
-    let bytes = splitString.compactMap { value in
-      return UInt8(value, radix: 16)
-    }
-
-    return bytes.count == 4 ? bytes : nil
-  }
 }

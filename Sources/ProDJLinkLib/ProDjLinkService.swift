@@ -13,46 +13,68 @@ public class ProDjLinkService {
 
   public let subject: PassthroughSubject<PdlPacket, Never>
 
-  let group: MultiThreadedEventLoopGroup
-  let queue: DispatchQueue
-  let ipAddress: String
-  let port: Int
-  var channels: [Channel]
+  internal var pdlDeviceIpAddresses: NSMutableArray
+
+  private let group: MultiThreadedEventLoopGroup
+  private let queue: DispatchQueue
+  private let ipAddressToBind: String
+  private let ipAddressUserDevice: String
+  private var channels: [Int: Channel]
+  private var keepAliveTimer: Timer?
+  
 
   public init(
-    ipAddress: String = defaultIpAddress,
-    port: Int = defaultPort
+    ipAddressUserDevice: String
   ) {
     self.group =  MultiThreadedEventLoopGroup(numberOfThreads: 2)
     self.queue = DispatchQueue(label: "ProDjLinkQ")
-    self.channels = []
-    self.ipAddress = ipAddress
-    self.port = port
+    self.channels = [:]
+    self.ipAddressToBind = ipAddressDefault
+    self.ipAddressUserDevice = ipAddressUserDevice
     self.subject = PassthroughSubject<PdlPacket, Never>()
+    self.pdlDeviceIpAddresses = []
   }
 
   public func startServer() {
     queue.async {
-      let ipAddress = defaultIpAddress
-      let port = defaultPort
-
       do {
         defer {
           try! self.group.syncShutdownGracefully()
         }
-
-        try self.channels.append(self.getBootstrap().bind(host: ipAddress, port: 50000).wait())
-        try self.channels.append(self.getBootstrap().bind(host: ipAddress, port: 50001).wait())
-        print("Server running at: \(ipAddress) port \(port)")
-        try self.channels.forEach { channel in try channel.closeFuture.wait() }
+        self.channels[50000] = try self.getBootstrap().bind(host: self.ipAddressToBind, port: 50000).wait()
+        self.channels[50001] = try self.getBootstrap().bind(host: self.ipAddressToBind, port: 50001).wait()
+        print("Server running")
+        self.scheduleKeepAliveTimer()
+        try self.channels.values.forEach { channel in try channel.closeFuture.wait() }
       } catch {
         print("Failed to start Server")
       }
     }
   }
 
+  private func scheduleKeepAliveTimer() {
+    group.next().scheduleRepeatedTask(initialDelay: .seconds(1), delay: .seconds(1), notifying: nil) { task in
+      guard self.pdlDeviceIpAddresses.count > 0 else { return }
+
+      self.pdlDeviceIpAddresses.forEach { pdlDeviceIpAddress in
+        guard let pdlDeviceIpAddress = pdlDeviceIpAddress as? String else { return }
+        let keepAliveData = KeepAlive(name: "CDJ-2000nexus", playerNumber: 5, macAddress: [0xff, 0xff, 0xff, 0xff, 0xff, 0xff], ipAddress: self.ipAddressUserDevice, isMixer: true)
+        let envelope = AddressedEnvelope<PdlData>(remoteAddress: try! SocketAddress.init(ipAddress: pdlDeviceIpAddress, port: 50000), data: keepAliveData)
+
+        guard let channelToUse = self.channels[50000] else { return }
+        print("Sending keepalive")
+        channelToUse.writeAndFlush(envelope).map {
+          print("Keep Alive was sent")
+        }.whenFailure { error in
+          print("Keep Alive failed, Error: \(error)")
+          task.cancel()
+        }
+      }
+    }
+  }
+
   public func stopServer() {
-    channels.forEach { channel in channel.close() }
+    _ = channels.values.forEach { channel in channel.close() }
   }
 
   func getBootstrap() -> DatagramBootstrap {
@@ -61,10 +83,11 @@ public class ProDjLinkService {
       .channelInitializer { channel in
         channel.pipeline.addHandlers([
           BackPressureHandler(),
-          ProDjLinkFilter(),
+          ProDjLinkFilter(pdlDeviceIpAddresses: self.pdlDeviceIpAddresses),
           ProDjLinkDataHandler(),
-          ProDjLinkPacketHandler(subject: self.subject)]
-        )
+          ProDjLinkPacketHandler(subject: self.subject),
+          ProDjLinkPacketOutBound()
+        ])
       }
     return bootstrap
   }
