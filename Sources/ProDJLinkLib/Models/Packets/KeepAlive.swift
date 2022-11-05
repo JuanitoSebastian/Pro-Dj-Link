@@ -14,15 +14,15 @@ public struct KeepAlive: PdlData, CustomStringConvertible {
   public let name: String
   public let playerNumber: Int
   public let isMixer: Bool
-  public let macAddress: [UInt8]
-  public let ipAddress: String
+  public let macAddress: MacAddress
+  public let ipAddress: IpAddress
   public let type: PdlPacketType
 
   internal init(
     name: String,
     playerNumber: Int,
-    macAddress: [UInt8],
-    ipAddress: String,
+    macAddress: MacAddress,
+    ipAddress: IpAddress,
     isMixer: Bool
   ) {
     self.name = name
@@ -34,11 +34,7 @@ public struct KeepAlive: PdlData, CustomStringConvertible {
   }
 
   public var macAddressString: String {
-    macAddress
-      .map { String(format: "%02X", $0) }
-      .reduce("", { concat, value in
-        return concat == "" ? concat + value : concat + ":" + value
-      })
+    macAddress.addressString
   }
 
   public var description: String {

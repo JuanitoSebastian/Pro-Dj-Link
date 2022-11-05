@@ -85,8 +85,8 @@ extension ProDjLinkService {
         let keepAliveData = KeepAlive(
           name: "CDJ-2000nexus",
           playerNumber: 5,
-          macAddress: macAddressUserDevice.address,
-          ipAddress: ipAddressUserDevice.addressString,
+          macAddress: macAddressUserDevice,
+          ipAddress: ipAddressUserDevice,
           isMixer: false
         )
         let envelope = AddressedEnvelope<PdlData>(

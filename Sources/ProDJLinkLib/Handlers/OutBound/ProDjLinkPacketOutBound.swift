@@ -42,8 +42,6 @@ extension ProDjLinkPacketOutBound {
   ///  - Parameter packet: Packet to convert to bytes
   ///  - Returns ByteBuffer on success. nil on fail.
   private func keepAlivePacketToByteBuffer(packet: KeepAlive) -> ByteBuffer? {
-    guard let ipAddress = Helper.shared.ipAddressToBytes(ipAddress: packet.ipAddress) else { return nil }
-
     var buff = ByteBuffer()
     buff.writeBytes(proDjLinkHeader)
     buff.writeBytes([packet.type.typeIdentifier])
@@ -59,8 +57,8 @@ extension ProDjLinkPacketOutBound {
     buff.writeBytes([UInt8(packet.playerNumber)])
     buff.writeBytes([0x01])
 
-    buff.writeBytes(packet.macAddress)
-    buff.writeBytes(ipAddress)
+    buff.writeBytes(packet.macAddress.address)
+    buff.writeBytes(packet.ipAddress.address)
 
     buff.writeBytes([0x01, 0x00, 0x00, 0x00, 0x01, 0x00])
 

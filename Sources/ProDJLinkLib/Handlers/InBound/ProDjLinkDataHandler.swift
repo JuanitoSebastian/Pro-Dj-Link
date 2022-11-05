@@ -53,15 +53,20 @@ final class ProDjLinkDataHandler: ChannelInboundHandler {
     let name = decodeStringFromBytes(atIndex: 0x0c, length: 20, bytes: data)
     let playerNumber = decodeIntFromBytes(atIndex: 0x24, length: 1, bytes: data)
     let deviceType = decodeIntFromBytes(atIndex: 0x34, length: 1, bytes: data)
-    let macAddress = data.getBytes(at: 0x26, length: 6)
+    let macAddressRaw = data.getBytes(at: 0x26, length: 6)
 
     guard
-      let name = name,
-      let playerNumber = playerNumber,
-      let deviceType = deviceType,
-      let macAddress = macAddress,
-      let senderIpAddress = message.remoteAddress.ipAddress
+      let name,
+      let playerNumber,
+      let deviceType,
+      let macAddressRaw,
+      let senderIpAddressString = message.remoteAddress.ipAddress
     else {
+      throw PdlError.decodingError
+    }
+
+    guard let macAddress = MacAddress(macAddress: macAddressRaw) ,
+    let senderIpAddress = IpAddress(ipAddress: senderIpAddressString) else {
       throw PdlError.decodingError
     }
 
@@ -74,7 +79,7 @@ final class ProDjLinkDataHandler: ChannelInboundHandler {
     )
 
     let packet = PdlPacket(
-      senderIpAddress: senderIpAddress,
+      senderIpAddress: senderIpAddress.addressString,
       received: Date.now,
       data: pdlData
     )
