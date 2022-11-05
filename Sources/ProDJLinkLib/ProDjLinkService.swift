@@ -15,7 +15,7 @@ public class ProDjLinkService {
   public var ipAddressUserDevice: IpAddress?
   public var macAddressUserDevice: MacAddress?
 
-  internal var pdlDeviceIpAddresses: NSMutableArray
+  internal var pdlPlayerIpAddresses: NSMutableArray
 
   private let group: MultiThreadedEventLoopGroup
   private let queue: DispatchQueue
@@ -33,7 +33,7 @@ public class ProDjLinkService {
     self.channels = [:]
     self.ipAddressToBind = ipAddressDefault
     self.subject = PassthroughSubject<PdlPacket, Never>()
-    self.pdlDeviceIpAddresses = []
+    self.pdlPlayerIpAddresses = []
     self.ipAddressUserDevice = ipAddressUserDevice
     self.macAddressUserDevice = macAddressUserDevice
   }
@@ -78,9 +78,9 @@ extension ProDjLinkService {
     }
 
     group.next().scheduleRepeatedTask(initialDelay: .seconds(1), delay: .milliseconds(1500), notifying: nil) { task in
-      guard self.pdlDeviceIpAddresses.count > 0 else { return }
+      guard self.pdlPlayerIpAddresses.count > 0 else { return }
 
-      self.pdlDeviceIpAddresses.forEach { pdlDeviceIpAddress in
+      self.pdlPlayerIpAddresses.forEach { pdlDeviceIpAddress in
         guard let pdlDeviceIpAddress = pdlDeviceIpAddress as? String else { return }
         let keepAliveData = KeepAlive(
           name: "CDJ-2000nexus",
@@ -111,8 +111,9 @@ extension ProDjLinkService {
       .channelInitializer { channel in
         channel.pipeline.addHandlers([
           BackPressureHandler(),
-          ProDjLinkFilter(pdlDeviceIpAddresses: self.pdlDeviceIpAddresses),
+          ProDjLinkFilter(),
           ProDjLinkDataDecoder(),
+          ActivePlayerHandlerHandler(pdlPlayerIpAddresses: self.pdlPlayerIpAddresses),
           ProDjLinkPacketHandler(subject: self.subject),
           ProDjLinkDataEncoder()
         ])
