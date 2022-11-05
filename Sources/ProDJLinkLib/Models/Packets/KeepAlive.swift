@@ -33,15 +33,11 @@ public struct KeepAlive: PdlData, CustomStringConvertible {
     self.type = .keepAlive
   }
 
-  public var macAddressString: String {
-    macAddress.addressString
-  }
-
   public var description: String {
     return """
     Keep Alive from \(name)
-    Ip: \(ipAddress)
-    Mac: \(macAddressString)
+    Ip: \(ipAddress.addressString)
+    Mac: \(macAddress.addressString)
     Player Number: \(playerNumber)
     IsMixer: \(isMixer)
     """

@@ -8,7 +8,7 @@
 import Foundation
 import NIO
 
-final class ProDjLinkDataHandler: ChannelInboundHandler {
+final class ProDjLinkDataDecoder: ChannelInboundHandler {
 
   typealias InboundIn = AddressedEnvelope<ByteBuffer>
   typealias InboundOut = PdlPacket
@@ -156,7 +156,7 @@ final class ProDjLinkDataHandler: ChannelInboundHandler {
 }
 
 // MARK: - Helper Functions
-extension ProDjLinkDataHandler {
+extension ProDjLinkDataDecoder {
 
   /// Decodes a string from given ByteBuffer
   /// - Parameter at: Where to start decoding from

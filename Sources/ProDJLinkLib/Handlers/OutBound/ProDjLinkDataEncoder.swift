@@ -11,7 +11,7 @@ import Network
 
 /// A ChannelOutBoundHandler that converts given PdlData objects to ByteBuffers that can
 /// be sent to Pro DJ Link equipment
-public class ProDjLinkPacketOutBound: ChannelOutboundHandler {
+public class ProDjLinkDataEncoder: ChannelOutboundHandler {
 
   public typealias OutboundIn = AddressedEnvelope<PdlData>
   public typealias OutboundOut = AddressedEnvelope<ByteBuffer>
@@ -36,7 +36,7 @@ public class ProDjLinkPacketOutBound: ChannelOutboundHandler {
 
 }
 
-extension ProDjLinkPacketOutBound {
+extension ProDjLinkDataEncoder {
 
   /// Converts a given KeepAlive object to a ByteBuffer
   ///  - Parameter packet: Packet to convert to bytes

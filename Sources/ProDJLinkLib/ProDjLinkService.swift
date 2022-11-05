@@ -112,9 +112,9 @@ extension ProDjLinkService {
         channel.pipeline.addHandlers([
           BackPressureHandler(),
           ProDjLinkFilter(pdlDeviceIpAddresses: self.pdlDeviceIpAddresses),
-          ProDjLinkDataHandler(),
+          ProDjLinkDataDecoder(),
           ProDjLinkPacketHandler(subject: self.subject),
-          ProDjLinkPacketOutBound()
+          ProDjLinkDataEncoder()
         ])
       }
     return bootstrap
