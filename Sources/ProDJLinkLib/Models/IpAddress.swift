@@ -49,12 +49,8 @@ extension IpAddress {
     let stringArray = stringToParse.components(separatedBy: ".")
     guard stringArray.count == 4 else { return nil }
 
-    Log.i("StringArray \(stringArray)")
-
     let rawValue: [UInt8] = stringArray
       .compactMap { UInt8($0) }
-
-    Log.i("RawValue: \(rawValue)")
 
     return rawValue.count == 4
     ? rawValue
