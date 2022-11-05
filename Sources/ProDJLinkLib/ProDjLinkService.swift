@@ -113,7 +113,7 @@ extension ProDjLinkService {
           BackPressureHandler(),
           ProDjLinkFilter(),
           ProDjLinkDataDecoder(),
-          ActivePlayerHandlerHandler(pdlPlayerIpAddresses: self.pdlPlayerIpAddresses),
+          ActivePlayerHandler(pdlPlayerIpAddresses: self.pdlPlayerIpAddresses),
           ProDjLinkPacketHandler(subject: self.subject),
           ProDjLinkDataEncoder()
         ])

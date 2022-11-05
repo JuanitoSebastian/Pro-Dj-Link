@@ -8,7 +8,7 @@
 import Foundation
 import NIOCore
 
-final class ActivePlayerHandlerHandler: ChannelInboundHandler {
+final class ActivePlayerHandler: ChannelInboundHandler {
 
   typealias InboundIn = PdlPacket
   typealias InboundOut = PdlPacket
