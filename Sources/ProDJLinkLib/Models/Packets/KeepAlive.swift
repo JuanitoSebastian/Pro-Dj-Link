@@ -9,6 +9,10 @@ import Foundation
 import Network
 import NIOCore
 
+
+/// A struct for the KeepAlive packets sent by DJMs and CDJs.
+/// Sent roughly ever 1.5 seconds these packets by the device.
+/// https://djl-analysis.deepsymmetry.org/djl-analysis/startup.html#cdj-keep-alive
 public struct KeepAlive: PdlData, CustomStringConvertible {
 
   public let name: String
@@ -29,7 +33,7 @@ public struct KeepAlive: PdlData, CustomStringConvertible {
     self.playerNumber = playerNumber
     self.macAddress = macAddress
     self.ipAddress = ipAddress
-    self.isMixer = name.contains("DJM")
+    self.isMixer = isMixer
     self.type = .keepAlive
   }
 
